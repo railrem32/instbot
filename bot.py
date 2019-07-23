@@ -57,7 +57,7 @@ def run_message(message):
     else:
         db.create_task(target_account,message.chat.id,message.from_user.id)
         bot.send_message(message.chat.id, 'Задание принято в обработку \nСтатус можно узнать через /status')
-        errmessage = executor.run()
+        errmessage = executor.run(True,photos,likers)
         if errmessage is not None :
              bot.send_message(message.chat.id, errmessage)
 

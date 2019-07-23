@@ -5,8 +5,7 @@ import inst
 def updateStatus(task,status):
     db.update_task_status(task.get(db.FIELD_TARGET_USER), task.get(db.FIELD_USER_ID), status)
 
-
-def base_run(isLikes=False,photos=0,likers=0):
+def run(isLikes=False,photos=0,likers=0):
     task = db.get_first_new_tasks()
     if task is None:
         return "Нету заданий"
