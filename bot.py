@@ -38,7 +38,29 @@ def run_message(message):
     else:
         db.create_task(target_account,message.chat.id,message.from_user.id)
         bot.send_message(message.chat.id, 'Задание принято в обработку \nСтатус можно узнать через /status')
-        executor.run()
+        errmessage = executor.run()
+        if errmessage is not None :
+             bot.send_message(message.chat.id, errmessage)
+
+@bot.message_handler(commands=['likers'])
+def run_message(message):
+    args = extract_arg(message.text)
+    if (not check_args(args, message.chat.id,"Не забывай передевать (профиль)  (кол-во лайкеров) (кол-во фото пользователя)!!!",3)):
+        return
+    target_account = args[0]
+    likers = args[1]
+    photos = args[2]
+
+    user = db.get_user_settings(message.from_user.id)
+    if (user is None):
+        bot.send_message(message.chat.id, 'Настрой логин и пароль !!! /set')
+    else:
+        db.create_task(target_account,message.chat.id,message.from_user.id)
+        bot.send_message(message.chat.id, 'Задание принято в обработку \nСтатус можно узнать через /status')
+        errmessage = executor.run()
+        if errmessage is not None :
+             bot.send_message(message.chat.id, errmessage)
+
 
 @bot.message_handler(commands=['cancel'])
 def cancel_message(message):
@@ -71,9 +93,5 @@ def status_message(message):
         result = 'в обработке'
     bot.send_message(message.chat.id, 'Задание по {} {}'.format(args[0],result))
 
-while (True):
-    try:
-        bot.polling()
-    except Exception:
-        continue
+bot.polling()
 

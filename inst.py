@@ -1,13 +1,27 @@
-import random
-import time
 from datetime import datetime
 import requests
 import db
 from instapy import InstaPy
 from instapy import smart_run
 import config
+import sys
+
+
 enable_notifocation = True
 
+def sendNotification(message,chat_id):
+    url = "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text=".format(config.CONST_TOKEN, chat_id)+message
+    requests.get(url)
+
+
+
+class writer(object):
+    log = ""
+    def write(self, data):
+        self.log = self.log + (data)
+
+logger = writer()
+sys.stdout = logger
 
 def get_session(insta_username,insta_password):
     session = InstaPy(username=insta_username,
@@ -19,8 +33,26 @@ def get_session(insta_username,insta_password):
 
     return session
 
+# args:
+# [0] = photos_grab_amount
+# [1] = follow_likers_per_photo
+#
+def _follow_likers(session,user,args):
+    session.follow_likers([user], photos_grab_amount=args[0], follow_likers_per_photo=args[1], randomize=False,
+                          sleep_delay=600, interact=False)
+
+def follow_likers(task,photos,likers):
+    base_follow(task, _follow_likers,[photos,likers])
+
+def _follow_and_like(session,user,args):
+    followers = session.grab_followers(username=user, amount="full", live_match=True, store_locally=True)
+    session.follow_by_list(followlist=followers, times=1, sleep_delay=600, interact=False)
 
 def follow_and_like(task):
+     base_follow(task,_follow_and_like,[])
+
+
+def base_follow(task,fn,args):
     user = task.get(db.FIELD_TARGET_USER)
     chat_id = task.get(db.FIELD_CHAT_ID)
     user_id = task.get(db.FIELD_USER_ID)
@@ -29,13 +61,11 @@ def follow_and_like(task):
     insta_username = setting.get(db.FIELD_USERNAME)
     insta_password =setting.get(db.FIELD_PASSWORD)
     # Send notification to my Telegram
+
     if (enable_notifocation) :
-        requests.get(
-        "https://api.telegram.org/bot{}/sendMessage?chat_id={}&text=Начал обработку {} в {}"
-            .format(config.CONST_TOKEN,chat_id,user,datetime.now().strftime("%H:%M:%S")))
+        message = "Начал обработку {} в {}".format(user, datetime.now().strftime("%H:%M:%S"))
+        sendNotification(message,chat_id)
 
-
-    
     # get a session!
     session = get_session(insta_username,insta_password)
 
@@ -105,41 +135,24 @@ def follow_and_like(task):
 
 
 
-
-        # activities
-
-        # # FOLLOW+INTERACTION on TARGETED accounts
-        # """ Select users form a list of a predefined targets...
-        # """
-        # number = random.randint(3, 5)
-        # random_targets = targets
-        #
-        # if len(targets) <= number:
-        #     random_targets = targets
-        #
-        # else:
-        #     random_targets = random.sample(targets, number)
-
         """ Interact with the chosen targets...
         """
-        followers = session.grab_followers(username=user, amount="full", live_match=True, store_locally=True)
-
-        session.follow_by_list(followlist=followers, times=1, sleep_delay=600, interact=False)
+        fn(session,user,args)
 
         # UNFOLLOW activity
         """ Unfollow nonfollowers after one day...
         """
-        session.unfollow_users(amount=random.randint(75, 100),
-                               InstapyFollowed=(True, "nonfollowers"),
-                               style="FIFO",
-                               unfollow_after=24 * 60 * 60, sleep_delay=600)
+        # session.unfollow_users(amount=random.randint(75, 100),
+        #                        InstapyFollowed=(True, "nonfollowers"),
+        #                        style="FIFO",
+        #                        unfollow_after=24 * 60 * 60, sleep_delay=600)
 
         """ Unfollow all users followed by InstaPy after one week to keep the 
         following-level clean...
         """
-        session.unfollow_users(amount=random.randint(75, 100),
-                               InstapyFollowed=(True, "all"), style="FIFO",
-                               unfollow_after=168 * 60 * 60, sleep_delay=600)
+        # session.unfollow_users(amount=random.randint(75, 100),
+        #                        InstapyFollowed=(True, "all"), style="FIFO",
+        #                        unfollow_after=168 * 60 * 60, sleep_delay=600)
 
         """ Joining Engagement Pods...
         """
@@ -151,5 +164,6 @@ def follow_and_like(task):
 
     # Send notification to my Telegram
     if (enable_notifocation) :
-        requests.get("https://api.telegram.org/bot{}/sendMessage?chat_id={}&text=Закончил обработку {} в {}"
-                .format(config.CONST_TOKEN, chat_id, user, datetime.now().strftime("%H:%M:%S")))
+        message = "Закончил обработку {} в {}".format(user, datetime.now().strftime("%H:%M:%S"))
+        sendNotification(message,chat_id)
+
