@@ -42,6 +42,23 @@ def run_message(message):
         if errmessage is not None :
              bot.send_message(message.chat.id, errmessage)
 
+@bot.message_handler(commands=['unfollow'])
+def run_message(message):
+    args = extract_arg(message.text)
+    if (not check_args(args, message.chat.id)):
+        return
+    target_account = args[0]
+    user = db.get_user_settings(message.from_user.id)
+    if (user is None):
+        bot.send_message(message.chat.id, 'Настрой логин и пароль !!! /set')
+    else:
+        db.create_task(target_account,message.chat.id,message.from_user.id)
+        bot.send_message(message.chat.id, 'Задание принято в обработку \nСтатус можно узнать через /status')
+        errmessage = executor.run(isUnfollow=True)
+        if errmessage is not None :
+             bot.send_message(message.chat.id, errmessage)
+
+
 @bot.message_handler(commands=['likers'])
 def run_message(message):
     args = extract_arg(message.text)
