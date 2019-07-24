@@ -21,7 +21,7 @@ def run(isLikes=False,photos=0,likers=0,isUnfollow=False):
         updateStatus(task, db.CONST_STATUS_FINISHED)
     except Exception as e:
         updateStatus(task, db.CONST_STATUS_FAILED)
-        return str(e)
+        return "Че то поломалось "+ str(e)
     return None
 
 

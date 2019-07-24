@@ -25,10 +25,8 @@ class writer(object):
     def slush(self):
         self.file.write(self.log)
 
-
-
 logger = writer()
-sys.stdout = logger
+#sys.stdout = logger
 
 def get_session(insta_username,insta_password):
     session = InstaPy(username=insta_username,
