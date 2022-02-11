@@ -14,7 +14,7 @@ instapy-chromedriver==2.46
 jsonschema==3.0.1
 MeaningCloud-python==1.1.1
 plyer==1.4.0
-protobuf==3.9.0
+protobuf==3.15.0
 pyrsistent==0.15.3
 pyTelegramBotAPI==3.6.6
 PyYAML==5.1.1
